@@ -1,14 +1,3 @@
-# -*- encoding: utf-8 -*-
-"""
-@File    : config.py.py
-@Time    : 2019/10/15 11:54 AM
-@Author  : slyu
-@Email   : yusulong@threathunter.cn
-@Software: PyCharm
-"""
-__all__ = ["G_CONFIG"]
-
-
 class Config(object):
     """
     全局配置信息
@@ -20,7 +9,7 @@ class Config(object):
         :return: {"uri": "", "db": "", "collection": ""}
         """
         return {
-            "uri": "mongodb://{user}:{password}@{host}:3717",
+            "uri": "mongodb://{user}:{password}@{host}:{port}",
             "db": "blackip",
             "collection": "blackip"
         }
@@ -32,10 +21,10 @@ class Config(object):
         :return: dict()
         """
         return {
-            "host": "{host}",
+            "host": "******",
             "port": 3306,
-            "user": "{user}",
-            "password": "{password}",
+            "user": "******",
+            "password": "******",
             "db": "blackip",
             "table": "blackip",
             "charset": "utf8"
@@ -44,12 +33,12 @@ class Config(object):
     @property
     def user(self):
         """
-        th_user 配置
+        th_user 永安在线官网控制台查看配置 //https:www.yazx.com
         :return: {"snuser": "", "snkey": ""}
         """
         return {
-            "snuser": "XXX",
-            "snkey": "XXX"
+            "snuser": "******",
+            "snkey": "******"
         }
 
     @property
@@ -64,10 +53,10 @@ class Config(object):
     @property
     def host(self):
         """
-        host 配置
-        :return: "ipdata.threathunter.cn"
+        host 配置 永安在线IP画像服务端域名, 联系工作人员获取
+        :return: "hostname"
         """
-        return "ipdata.threathunter.cn"
+        return "******"
 
 
 G_CONFIG = Config()
