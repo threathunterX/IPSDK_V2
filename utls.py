@@ -25,7 +25,7 @@ from Crypto import Random
 
 from config import G_CONFIG
 
-__all__ = ["DownLoad", "produce", "consume"]
+__all__ = ["DownLoad", "produce", "consume", "InitialPackage"]
 
 
 class ThLog(object):
@@ -237,7 +237,6 @@ class InitialPackage():
             count = 1
             data = []
             for line in fp:
-                print(line)
                 if count % size == 0:
                     yield data
                     data = []
@@ -547,7 +546,7 @@ class IpToMysql(object):
         self.table = table
 
         self.pool = PooledDB(
-            creator=pymysql, maxconnections=10, mincached=5, blocking=True, ping=0,
+            creator=pymysql, maxconnections=10, mincached=5, blocking=True,
             host=self.host, port=self.port, user=self.user, passwd=self.password, database=self.db,
             charset=self.charset, **kwargs
         )
@@ -742,7 +741,6 @@ def consume(database):
                     # start_time = time.time()
                     n = 0
                     while n < 5:
-                        print(len(json_data_list))
                         if IpToMysql.get_instance().execute_update_sql_with_commit(json_data_list):
                             status_upload(file, "db")
                             break

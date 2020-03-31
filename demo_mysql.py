@@ -7,7 +7,7 @@
 @Software: PyCharm
 """
 from multiprocessing import Process
-from .utls import DownLoad, InitialPackage, produce, consume
+from utls import DownLoad, InitialPackage, produce, consume
 
 
 if __name__ == "__main__":
