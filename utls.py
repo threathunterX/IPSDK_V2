@@ -166,8 +166,6 @@ class InitialPackage():
             file_path = "./download/" + file_name
             down_cmd = "wget '{0}' -O {1}".format(url, file_path)
             subprocess.call(down_cmd, shell=True)
-            cmd = "gunzip {file}".format(file=file_path)
-            subprocess.call(cmd, shell=True)
             status_upload(file_name.split(".")[0], "download")
             return True
         except:
