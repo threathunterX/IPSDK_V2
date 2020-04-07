@@ -283,6 +283,12 @@ class InitialPackage():
             return
 
     def process(self, database):
+        path_to_task = "./task/"
+        if not os.path.isdir(path_to_task):
+            os.mkdir(path_to_task)
+        path_to_watch = "./download/"
+        if not os.path.isdir(path_to_watch):
+            os.mkdir(path_to_watch)
         if database == "mysql":
             IpToMysql.get_instance().create_table()
         filename = self.get_initial_resp()
