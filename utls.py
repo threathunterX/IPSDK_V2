@@ -215,7 +215,7 @@ class InitialPackage():
                         "type": data_list[1],
                         "risk_tag": data_list[2],
                         "risk_score": data_list[3],
-                        "level": data_list[4],
+                        "risk_level": data_list[4],
                         "country": data_list[5],
                         "province": data_list[6],
                         "city": data_list[7],
@@ -415,7 +415,7 @@ class IpToMongoDB(object):
                 "type": ,IP类型，包括家庭宽带、数据中心、移动网络、企业专线、校园单位、未知
                 "risk_tag": 风险标签，包括秒拨、代理、数据中心、无
                 "risk_score": 风险分数，范围0-100，分数越高被黑产持有的概率也就越高
-                "level":风险等级，包括高、中、低、无
+                "risk_level":风险等级，包括高、中、低、无
                 "country": 国家
                 "province": 省份
                 "city": 城市
@@ -458,7 +458,7 @@ class IpToMongoDB(object):
                 "type": ,IP类型，包括家庭宽带、数据中心、移动网络、企业专线、校园单位、未知
                 "risk_tag": 风险标签，包括秒拨、代理、数据中心、无
                 "risk_score": 风险分数，范围0-100，分数越高被黑产持有的概率也就越高
-                "level":风险等级，包括高、中、低、无
+                "risk_level":风险等级，包括高、中、低、无
                 "country": 国家
                 "province": 省份
                 "city": 城市
@@ -563,7 +563,7 @@ class IpToMysql(object):
               "`type` varchar(10) COMMENT '类型', " \
               "`risk_tag` varchar(200) COMMENT '风险标签'," \
               "`risk_score` varchar(10) COMMENT '风险分数'," \
-              "`level` varchar(10) COMMENT '风险等级'," \
+              "`risk_level` varchar(10) COMMENT '风险等级'," \
               "`country` varchar(50) COMMENT '国家', " \
               "`province` varchar(100) COMMENT '省份'," \
               "`city` varchar(100) COMMENT '城市'," \
@@ -594,12 +594,12 @@ class IpToMysql(object):
             conn = self.pool.connection()
             cursor = conn.cursor()
             sql = "INSERT INTO `{table}` " \
-                  "(`ip`, `type`, `risk_tag`, `risk_score`, `level`,`country`, `province`, `city`, `district`, " \
+                  "(`ip`, `type`, `risk_tag`, `risk_score`, `risk_level`,`country`, `province`, `city`, `district`, " \
                   "`owner`,`latitude`,`longitude`,`adcode`,`areacode`,`continent`) " \
-                  "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(level)s,%(country)s, %(province)s, " \
+                  "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(risk_level)s,%(country)s, %(province)s, " \
                   "%(city)s,%(district)s, %(owner)s, %(latitude)s,%(longitude)s,%(adcode)s," \
                   "%(areacode)s,%(continent)s) ON DUPLICATE KEY UPDATE risk_score=VALUES(risk_score)," \
-                  " risk_tag=VALUES(risk_tag),level=VALUES(level)"
+                  " risk_tag=VALUES(risk_tag),risk_level=VALUES(risk_level)"
             sql = sql.format(table=self.table)
             cursor.executemany(sql, param_list)
             conn.commit()
@@ -628,9 +628,9 @@ class IpToMysql(object):
                     rows = cursor.execute(query_sql, data)
                     if rows == 0:
                         insert_sql = "INSERT INTO `{table}` " \
-                                     "(`ip`, `type`, `risk_tag`, `risk_score`, `level`,`country`, `province`, `city`, " \
+                                     "(`ip`, `type`, `risk_tag`, `risk_score`, `risk_level`,`country`, `province`, `city`, " \
                                      "`district`, `owner`,`latitude`,`longitude`,`adcode`,`areacode`,`continent`) " \
-                                     "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(level)s,%(country)s, " \
+                                     "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(risk_level)s,%(country)s, " \
                                      "%(province)s, %(city)s,%(district)s, %(owner)s, %(latitude)s,%(longitude)s,%(adcode)s," \
                                      "%(areacode)s,%(continent)s)"
                         insert_sql = insert_sql.format(table=self.table)
@@ -648,7 +648,7 @@ class IpToMysql(object):
                             data["risk_tag"] = result[0].replace(result[0][index + 3:index + 22],
                                                                  data["risk_tag"][3:22])
                         update_sql = "UPDATE `{table}` set `risk_tag` =%(risk_tag)s,`risk_score` =%(risk_score)s," \
-                                     "`level`=%(level)s where ip=%(ip)s"
+                                     "`risk_level`=%(risk_level)s where ip=%(ip)s"
                         update_sql = update_sql.format(table=self.table)
                         cursor.execute(update_sql, data)
             conn.commit()
@@ -705,7 +705,7 @@ def consume(database):
                     "type": data_list[1],
                     "risk_tag": data_list[2],
                     "risk_score": data_list[3],
-                    "level": data_list[4],
+                    "risk_level": data_list[4],
                     "country": data_list[5],
                     "province": data_list[6],
                     "city": data_list[7],
