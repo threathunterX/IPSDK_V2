@@ -21,10 +21,10 @@ class Config(object):
         :return: dict()
         """
         return {
-            "host": "******",
+            "host": "127.0.0.1",
             "port": 3306,
-            "user": "******",
-            "password": "******",
+            "user": "****",
+            "password": "****",
             "db": "blackip",
             "table": "blackip",
             "charset": "utf8"
@@ -37,8 +37,8 @@ class Config(object):
         :return: {"snuser": "", "snkey": ""}
         """
         return {
-            "snuser": "******",
-            "snkey": "******"
+            "snuser": "****",
+            "snkey": "*****"
         }
 
     @property
