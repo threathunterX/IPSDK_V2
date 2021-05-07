@@ -7,8 +7,10 @@
 
 import base64
 import json
+import os
 import subprocess
 import traceback
+from functools import wraps
 
 import requests
 from Crypto import Random
@@ -17,28 +19,10 @@ from Crypto.Cipher import AES
 from config import G_CONFIG
 from utils.thlog import ThLog
 
-__all__ = ["logger", "status_upload", "aes_encrypt_seg", "aes_decrypt_seg", "parse_data", "remove_file",
-           "exec_func_times_if_error"]
+__all__ = ["logger", "aes_encrypt_seg", "aes_decrypt_seg", "parse_data", "remove_file", "exec_func_times_if_error",
+           "read_temp_file", "write_temp_file"]
 
 logger = ThLog("cli")
-
-
-def status_upload(version, tag, error_msg=""):
-    url = "http://{}/call_back".format(G_CONFIG.host)
-
-    payload = {"snuser": G_CONFIG.user["snuser"], "snkey": G_CONFIG.user["snkey"], "version": version, "tag": tag,
-               "error_msg": error_msg}
-    headers = {
-        'Content-Type': "application/json"
-    }
-    logger.info("callback: {}".format(json.dumps(payload)))
-    try:
-        requests.request("POST", url, data=json.dumps(payload), headers=headers, timeout=1)
-        return 0
-    except Exception as e:
-        logger.error(e)
-        logger.error(traceback.format_exc())
-        return 1
 
 
 def aes_decrypt_seg(phoneno, snkey=G_CONFIG.user["snkey"]):
@@ -106,6 +90,28 @@ def parse_data(origin_data):
         return {}
 
 
+def exec_times(func):
+    '''
+    传入一个返回值0，1的函数 如果错误就继续调用最大调用此时为times，如果调用成功返回1调用失败返回0
+    :param func: 回调函数
+    :param times: 最大调用次数
+    :return: 如果调用函数func成功返回1调用失败返回0
+    '''
+
+    @wraps(func)
+    def warpper(*args, **kwargs):
+        n = 0
+        while func(*args, **kwargs) != 1:
+            n = n + 1
+            if n < 5:
+                continue
+            if n == 5:
+                return 0
+        return 1
+
+    return warpper
+
+
 def exec_func_times_if_error(func, *func_args, times=5, **kwargs):
     '''
     传入一个返回值0，1的函数 如果错误就继续调用最大调用此时为times，如果调用成功返回1调用失败返回0
@@ -121,3 +127,17 @@ def exec_func_times_if_error(func, *func_args, times=5, **kwargs):
         if n == times:
             return 0
     return 1
+
+
+def write_temp_file(file_name, version):
+    with open(file_name, 'w') as f:
+        f.seek(0)
+        f.write(version)
+
+
+def read_temp_file(file_name) -> str:
+    if not os.path.exists(file_name):
+        return ""
+    with open(file_name, 'r') as fp:
+        result = fp.readline()
+    return result

@@ -3,7 +3,7 @@ import time
 import traceback
 
 from utils.db import IpToMongoDB, IpToMysql
-from utils.utls import logger, parse_data, status_upload, remove_file, exec_func_times_if_error
+from utils.utls import logger, parse_data, remove_file, write_temp_file
 
 
 class Consume(object):
@@ -32,17 +32,16 @@ class Consume(object):
 
             if database == "mongodb":
                 logger.debug("mongo")
-                cls.change_risk_tag_already_in_mongo(datas, ips)
-                logger.debug("change_risk_tag_already_in_mongo done")
                 values = datas.values()
                 logger.debug(values)
-                cls.batch_update_into_mongo(values, files)
+                cls.batch_update_into_mongo(values)
+                write_temp_file("upgrade_version", files[len(files) - 1])
                 logger.info("入库 耗时:{0}, 共插入数据{1}".format(time.time() - start_time, len(values)))
 
             elif database == "mysql":
-                cls.change_risk_tag_already_in_mysql(datas, ips)
                 values = datas.values()
-                cls.batch_update_into_mysql(values, files)
+                cls.batch_update_into_mysql(values)
+                write_temp_file("upgrade_version", files[len(files) - 1])
                 logger.info("入库 耗时:{0}, 共插入数据{1}".format(time.time() - start_time, len(values)))
                 pass
         except Exception as e:
@@ -108,27 +107,16 @@ class Consume(object):
                                                               data["risk_tag"][3:22])
 
     @classmethod
-    def batch_update_into_mongo(cls, values, files):
-        if exec_func_times_if_error(IpToMongoDB.get_instance().batch_update, values, times=5):
-            cls.batch_upload(files, "db")
-        else:
+    def batch_update_into_mongo(cls, values):
+        if IpToMongoDB.get_instance().batch_update:
             logger.error("尝试5次未下载成功")
-            cls.batch_upload(files, "db_fall")
 
         return values
 
     @classmethod
-    def batch_upload(cls, files, status, error_msg=""):
-        for file in files:
-            status_upload(file, status, error_msg)
-
-    @classmethod
-    def batch_update_into_mysql(cls, values, files):
-        if exec_func_times_if_error(IpToMysql.get_instance().execute_many_sql_with_commit, values, times=5):
-            cls.batch_upload(files, "db")
-        else:
+    def batch_update_into_mysql(cls, values):
+        if IpToMysql.get_instance().execute_many_sql_with_commit:
             logger.error("尝试5次未下载成功")
-            cls.batch_upload(files, "db_fall")
         return values
 
     @classmethod
