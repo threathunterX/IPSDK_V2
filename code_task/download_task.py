@@ -79,7 +79,7 @@ class DownLoad(object):
         # self.get_initial_resp()
         curver = G_CONFIG.curver
         upgrade_file = read_temp_file("upgrade_version")
-        if upgrade_file is not "":
+        if upgrade_file != "":
             curver = upgrade_file
         while True:
             result = self.get_upgrade_resp({"curver": curver, "limit": 100})
