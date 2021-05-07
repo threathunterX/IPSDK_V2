@@ -7,7 +7,7 @@ from pymongo import MongoClient, ReplaceOne
 from DBUtils.PooledDB import PooledDB
 
 from config import G_CONFIG
-from utils.utls import logger
+from utils.utls import logger, exec_times
 
 
 class IpToMongoDB(object):
@@ -90,6 +90,7 @@ class IpToMongoDB(object):
             logger.error(traceback.format_exc())
             return 0
 
+    @exec_times
     def batch_update(self, data_list):
         """
         批量操作,存在则更新,不存在则insert
@@ -161,6 +162,7 @@ class IpToMysql(object):
         conn.close()
         return 1
 
+    @exec_times
     def execute_many_sql_with_commit(self, param_list):
         """
         执行更新或插入语句，批量插入
@@ -179,7 +181,10 @@ class IpToMysql(object):
                   "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(risk_level)s,%(country)s, %(province)s, " \
                   "%(city)s,%(district)s, %(owner)s, %(latitude)s,%(longitude)s,%(adcode)s," \
                   "%(areacode)s,%(continent)s) ON DUPLICATE KEY UPDATE risk_score=VALUES(risk_score)," \
-                  " risk_tag=VALUES(risk_tag),risk_level=VALUES(risk_level)"
+                  " risk_tag=VALUES(risk_tag),risk_level=VALUES(risk_level), country=VALUES(country), " \
+                  "province=VALUES(province),city=VALUES(city),district=VALUES(district),owner=VALUES(owner)," \
+                  "latitude=VALUES(latitude),longitude=VALUES(longitude), adcode=VALUES(adcode)," \
+                  "continent=VALUES(continent), `type`=VALUES(`type`);"
             sql = sql.format(table=self.table)
             cursor.executemany(sql, param_list)
             conn.commit()
@@ -241,34 +246,18 @@ class IpToMysql(object):
             conn = self.pool.connection()
             with conn.cursor() as cursor:
                 for data in param_list:
-                    query_sql = "SELECT `risk_tag` from `{table}` where ip=%(ip)s"
-                    query_sql = query_sql.format(table=self.table)
-                    rows = cursor.execute(query_sql, data)
-                    if rows == 0:
-                        insert_sql = "INSERT INTO `{table}` " \
-                                     "(`ip`, `type`, `risk_tag`, `risk_score`, `risk_level`,`country`, `province`, `city`, " \
-                                     "`district`, `owner`,`latitude`,`longitude`,`adcode`,`areacode`,`continent`) " \
-                                     "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(risk_level)s,%(country)s, " \
-                                     "%(province)s, %(city)s,%(district)s, %(owner)s, %(latitude)s,%(longitude)s,%(adcode)s," \
-                                     "%(areacode)s,%(continent)s)"
-                        insert_sql = insert_sql.format(table=self.table)
-                        cursor.execute(insert_sql, data)
-                    else:
-                        result = cursor.fetchone()
-                        new_tag = data["risk_tag"][:2]
-                        index = result[0].find(new_tag)
-                        # 风险标签是否存在，存在则更新时间，不存在则追加
-                        if index == -1:
-                            if data["type"] == "数据中心":
-                                result[0] = result[0].replace("机房流量", "")
-                            data["risk_tag"] = result[0] + "|" + data["risk_tag"]
-                        else:
-                            data["risk_tag"] = result[0].replace(result[0][index + 3:index + 22],
-                                                                 data["risk_tag"][3:22])
-                        update_sql = "UPDATE `{table}` set `risk_tag` =%(risk_tag)s,`risk_score` =%(risk_score)s," \
-                                     "`risk_level`=%(risk_level)s where ip=%(ip)s"
-                        update_sql = update_sql.format(table=self.table)
-                        cursor.execute(update_sql, data)
+                    insert_sql = "INSERT INTO `{table}` " \
+                                 "(`ip`, `type`, `risk_tag`, `risk_score`, `risk_level`,`country`, `province`, `city`, `district`, " \
+                                 "`owner`,`latitude`,`longitude`,`adcode`,`areacode`,`continent`) " \
+                                 "VALUES(%(ip)s, %(type)s, %(risk_tag)s, %(risk_score)s, %(risk_level)s,%(country)s, %(province)s, " \
+                                 "%(city)s,%(district)s, %(owner)s, %(latitude)s,%(longitude)s,%(adcode)s," \
+                                 "%(areacode)s,%(continent)s) ON DUPLICATE KEY UPDATE risk_score=VALUES(risk_score)," \
+                                 " risk_tag=VALUES(risk_tag),risk_level=VALUES(risk_level), country=VALUES(country), " \
+                                 "province=VALUES(province),city=VALUES(city),district=VALUES(district),owner=VALUES(owner)," \
+                                 "latitude=VALUES(latitude),longitude=VALUES(longitude), adcode=VALUES(adcode)," \
+                                 "continent=VALUES(continent), `type`=VALUES(`type`);"
+                    insert_sql = insert_sql.format(table=self.table)
+                    cursor.execute(insert_sql, data)
             conn.commit()
             conn.close()
             return 1

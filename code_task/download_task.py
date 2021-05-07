@@ -6,7 +6,7 @@ import traceback
 import requests
 
 from config import G_CONFIG
-from utils.utls import logger, aes_encrypt_seg, aes_decrypt_seg, status_upload, exec_func_times_if_error
+from utils.utls import logger, aes_encrypt_seg, aes_decrypt_seg, exec_func_times_if_error, read_temp_file
 
 
 class DownLoad(object):
@@ -78,6 +78,9 @@ class DownLoad(object):
         # 先下载全量包
         # self.get_initial_resp()
         curver = G_CONFIG.curver
+        upgrade_file = read_temp_file("upgrade_version")
+        if upgrade_file != "":
+            curver = upgrade_file
         while True:
             result = self.get_upgrade_resp({"curver": curver, "limit": 100})
             count = result.get("count", 0)
@@ -86,10 +89,8 @@ class DownLoad(object):
             if count:
                 for file in files:
                     if exec_func_times_if_error(self.download, url=file["link"], file_name=file["name"], times=10):
-                        # status_upload(file["name"].split(".")[0], "download")
                         continue
                     else:
                         logger.error("尝试10次未下载成功")
-                        # status_upload(file["name"].split(".")[0], "download_fail")
 
             time.sleep(10)

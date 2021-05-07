@@ -4,8 +4,8 @@
 
 
         |__config.py         # 配置项
-        |__code_task         # 解析入库的一些方法
-        |__utls.py           # 解析入库的一些方法
+        |__code_task         # 消费者生产者任务
+        |__utls.py           # 公用的工具方法
         |__demo_mongo.py     # 入mongodb库的启动脚本
         |__demo_mysql.py     # 入mysql库的启动脚本
         |__requirements.txt  # python3 的一些依赖包

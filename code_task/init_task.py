@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 import json
 import subprocess
+import time
 import traceback
 
 import requests
 
 from config import G_CONFIG
-from utils.db import IpToMongoDB, IpToMysql
-from utils.utls import status_upload, logger, aes_decrypt_seg, parse_data, exec_func_times_if_error
+from utils.db import IpToMongoDB, IpToMysql, IpToRedis
+from utils.utls import logger, aes_decrypt_seg, parse_data, write_temp_file
 
 
 class InitialPackage(object):
@@ -74,9 +75,9 @@ class InitialPackage(object):
                     parse_line = parse_data(lines)
                     json_data_list.append(parse_line)
                     if len(json_data_list) >= 100000:
-                        cls.insert_to_db(database, filename, json_data_list)
+                        cls.insert_to_db(database, json_data_list)
                         json_data_list = list()
-                cls.insert_to_db(database, filename, json_data_list)
+                cls.insert_to_db(database, json_data_list)
 
                 # logger.info("入库 耗时:{0}, 共插入数据{1}".format(time.time() - start_time, len(json_data_list)))
         except Exception as e:
@@ -88,21 +89,14 @@ class InitialPackage(object):
             return
 
     @classmethod
-    def insert_to_db(cls, database, filename, json_data_list):
+    def insert_to_db(cls, database, json_data_list):
+        start_time = time.time()
         if database == "mongodb":
-            # start_time = time.time()
-            if exec_func_times_if_error(IpToMongoDB.get_instance().batch_update, json_data_list, times=5):
-                status_upload(filename, "db")
-            else:
-                status_upload(filename, "db_fail")
+            IpToMongoDB.get_instance().batch_update(json_data_list)
+        elif database == "mysql":
+            IpToMysql.get_instance().execute_many_sql_with_commit(json_data_list)
 
-            # logger.info("入库 耗时:{0}, 共插入数据{1}".format(time.time() - start_time, len(json_data_list)))
-        if database == "mysql":
-            # start_time = time.time()
-            if exec_func_times_if_error(IpToMysql.get_instance().execute_many_sql_with_commit, json_data_list, times=5):
-                status_upload(filename, "db")
-            else:
-                status_upload(filename, "db_fail")
+        logger.info("入库 耗时:{0}, 共插入数据{1}".format(time.time() - start_time, len(json_data_list)))
 
     def process(self, database):
         if database == "mysql":
@@ -110,3 +104,4 @@ class InitialPackage(object):
         filename = self.get_initial_resp()
         file_new = self.unzip(filename)
         self.write_data(database, file_new)
+        write_temp_file("init_version", file_new)
