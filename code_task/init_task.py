@@ -7,7 +7,7 @@ import traceback
 import requests
 
 from config import G_CONFIG
-from utils.db import IpToMongoDB, IpToMysql, IpToRedis
+from utils.db import IpToMongoDB, IpToMysql
 from utils.utls import logger, aes_decrypt_seg, parse_data, write_temp_file
 
 
