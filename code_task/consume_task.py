@@ -108,14 +108,14 @@ class Consume(object):
 
     @classmethod
     def batch_update_into_mongo(cls, values):
-        if IpToMongoDB.get_instance().batch_update:
+        if IpToMongoDB.get_instance().batch_update(values):
             logger.error("尝试5次未下载成功")
 
         return values
 
     @classmethod
     def batch_update_into_mysql(cls, values):
-        if IpToMysql.get_instance().execute_many_sql_with_commit:
+        if IpToMysql.get_instance().execute_many_sql_with_commit(values):
             logger.error("尝试5次未下载成功")
         return values
 
